@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: tta-lms
+    env: php
+    plan: free
+    buildCommand: "composer install --no-dev --ignore-platform-reqs && php artisan package:discover --ansi && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+    startCommand: "php artisan migrate --force && php artisan serve --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
