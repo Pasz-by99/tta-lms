@@ -27,12 +27,13 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->homeUrl('/admin')
             ->brandName('Tinahls Triad Agro')
             ->brandLogo(asset('images/logo.png'))
             ->brandLogoHeight('3rem')
             ->favicon(asset('images/logo.png'))
             ->colors([
-                'primary' => Color::hex('#2E7D32'), // TTA Green
+                'primary' => Color::hex('#2E7D32'),
                 'gray' => Color::Slate,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -42,9 +43,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-    \App\Filament\Widgets\StatsOverview::class,
-    Widgets\AccountWidget::class,
-])
+                \App\Filament\Widgets\StatsOverview::class,
+                Widgets\AccountWidget::class,
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

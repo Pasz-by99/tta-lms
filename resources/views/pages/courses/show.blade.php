@@ -3,95 +3,70 @@
 @section('title', $course->title)
 
 @section('content')
-<div class="bg-tta text-white py-12">
+<div class="bg-tta text-white py-10">
     <div class="max-w-5xl mx-auto px-4">
-        <div class="text-sm text-green-200 mb-2">{{ $course->category->name }}</div>
-        <h1 class="text-3xl md:text-4xl font-bold">{{ $course->title }}</h1>
-        <div class="mt-4 flex flex-wrap gap-4 text-sm">
+        <div class="text-sm text-green-100 mb-1">{{ $course->category->name ?? '' }}</div>
+        <h1 class="text-3xl font-bold">{{ $course->title }}</h1>
+        <div class="mt-3 flex flex-wrap gap-2 text-sm">
             <span class="bg-white/20 px-3 py-1 rounded-full">{{ $course->level }}</span>
             <span class="bg-white/20 px-3 py-1 rounded-full">{{ $course->duration }}</span>
             <span class="bg-white/20 px-3 py-1 rounded-full font-bold">N$ {{ number_format($course->price, 0) }}</span>
-            <span class="bg-white/20 px-3 py-1 rounded-full">{{ $course->lessons->count() }} Lessons</span>
         </div>
     </div>
 </div>
 
-<div class="max-w-5xl mx-auto px-4 py-12 grid lg:grid-cols-3 gap-10">
-
-    {{-- Left Column --}}
-    <div class="lg:col-span-2 space-y-8">
-
-        {{-- About --}}
-        <div class="bg-white rounded-xl shadow-sm border p-8">
-            <h2 class="text-xl font-bold mb-4">About this course</h2>
-            <div class="prose max-w-none text-gray-700">
-                {!! nl2br(e($course->description)) !!}
-            </div>
+<div class="max-w-5xl mx-auto px-4 py-10 grid lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-xl border p-6">
+            <h2 class="text-xl font-bold mb-3">About this course</h2>
+            <p class="text-gray-700 whitespace-pre-line">{{ $course->short_description ?: $course->description }}</p>
         </div>
 
-        {{-- Lessons List --}}
-        <div class="bg-white rounded-xl shadow-sm border p-8">
-            <h2 class="text-xl font-bold mb-6">Course Content ({{ $course->lessons->count() }} lessons)</h2>
+        <div class="bg-white rounded-xl border p-6">
+            <h2 class="text-xl font-bold mb-4">Course Outline</h2>
+            <p class="text-sm text-gray-500 mb-4">Lesson titles only. Full content is available after enrollment and payment.</p>
 
-            @if($course->lessons->count() > 0)
-                <div class="space-y-3">
-                    @foreach($course->lessons->where('is_published', true) as $index => $lesson)
-                        <div class="flex items-start gap-4 p-4 rounded-lg border hover:bg-gray-50 transition">
-                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 text-tta rounded-full flex items-center justify-center font-bold text-sm">
-                                {{ $index + 1 }}
-                            </div>
+            @if($course->lessons && $course->lessons->count())
+                <div class="space-y-2">
+                    @foreach($course->lessons->where('is_published', true) as $i => $lesson)
+                        <div class="flex items-center gap-3 p-3 rounded-lg border bg-gray-50">
+                            <div class="w-8 h-8 rounded-full bg-green-100 text-tta flex items-center justify-center text-sm font-bold">{{ $i+1 }}</div>
                             <div class="flex-1">
-                                <h3 class="font-semibold">{{ $lesson->title }}</h3>
-                                <div class="flex items-center gap-3 mt-1 text-sm text-gray-500">
-                                    <span class="capitalize">{{ $lesson->content_type }}</span>
-                                    @if($lesson->duration_minutes)
-                                        <span>• {{ $lesson->duration_minutes }} min</span>
-                                    @endif
-                                </div>
+                                <div class="font-medium">{{ $lesson->title }}</div>
+                                <div class="text-xs text-gray-500 capitalize">{{ $lesson->content_type }} @if($lesson->duration_minutes)• {{ $lesson->duration_minutes }} min @endif</div>
                             </div>
-                            <div>
-                                @if($lesson->content_type === 'video')
-                                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Video</span>
-                                @elseif($lesson->content_type === 'file')
-                                    <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">File</span>
-                                @else
-                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Notes</span>
-                                @endif
-                            </div>
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Locked</span>
                         </div>
                     @endforeach
                 </div>
             @else
-                <p class="text-gray-500">Lessons will be added soon.</p>
+                <p class="text-gray-500">Outline coming soon.</p>
             @endif
         </div>
     </div>
 
-    {{-- Right Column - Enrollment Card --}}
     <div>
-        <div class="bg-white rounded-xl shadow-sm border p-6 sticky top-24">
+        <div class="bg-white rounded-xl border p-6 sticky top-24">
             <div class="text-3xl font-bold text-tta mb-1">N$ {{ number_format($course->price, 0) }}</div>
-            <p class="text-sm text-gray-500 mb-6">Manual payment only</p>
+            <p class="text-sm text-gray-500 mb-4">Manual payment only</p>
 
-            <div class="bg-green-50 border border-green-100 rounded-lg p-4 text-sm mb-6">
-                <p class="font-semibold text-tta mb-2">How to enroll:</p>
+            <div class="bg-green-50 border border-green-100 rounded-lg p-4 text-sm mb-4">
+                <p class="font-semibold text-tta mb-2">How to enroll</p>
                 <ol class="list-decimal list-inside space-y-1 text-gray-700">
-                    <li>Call or WhatsApp us</li>
-                    <li>Make payment as instructed</li>
-                    <li>We confirm your seat</li>
+                    <li>Contact us on WhatsApp/Call</li>
+                    <li>Make payment</li>
+                    <li>We activate your student account</li>
                 </ol>
             </div>
 
-            <div class="space-y-2 text-sm">
-                <p class="font-semibold">Call / WhatsApp:</p>
-                <p class="text-lg font-bold">+264 81 318 8489</p>
-                <p class="text-lg font-bold">+264 81 705 0652</p>
-                <p class="mt-3 text-gray-600">tinahsagrotriad@gmail.com</p>
+            <div class="text-sm space-y-1 mb-4">
+                <div class="font-semibold">Call / WhatsApp</div>
+                <div class="font-bold">+264 81 318 8489</div>
+                <div class="font-bold">+264 81 705 0652</div>
+                <div class="text-gray-600 mt-2">tinahsagrotriad@gmail.com</div>
             </div>
 
-            <a href="{{ route('contact') }}" class="mt-6 block w-full bg-tta text-white text-center font-bold py-3 rounded-lg hover:bg-tta-dark transition">
-                Contact to Enroll
-            </a>
+            <a href="{{ url('/contact') }}" class="block text-center bg-tta text-white font-bold py-3 rounded-lg">Contact to Enroll</a>
         </div>
     </div>
 </div>
