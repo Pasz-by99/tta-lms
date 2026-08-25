@@ -41,7 +41,7 @@ class CourseSeeder extends Seeder
                 'category' => 'Training & Capacity Building',
                 'price' => 300,
                 'duration' => 'Per session',
-                'level' => 'All levels',
+                'level' => 'Beginner',
                 'short_description' => 'Guided mentorship and coaching for practical farm improvement.',
             ],
             [
