@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable;
 
@@ -34,6 +36,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return in_array($this->role, ['admin', 'teacher'], true);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -57,8 +64,8 @@ class User extends Authenticatable
     public function courses()
     {
         return $this->belongsToMany(Course::class, 'enrollments')
-                    ->withPivot('status', 'enrolled_at')
-                    ->withTimestamps();
+            ->withPivot('status', 'enrolled_at')
+            ->withTimestamps();
     }
 
     public function lessonProgress()
@@ -66,9 +73,6 @@ class User extends Authenticatable
         return $this->hasMany(LessonProgress::class);
     }
 
-    /**
-     * Generate next student number (TTA-2026-0001, TTA-2026-0002, ...)
-     */
     public static function generateStudentNumber(): string
     {
         $year = date('Y');
@@ -78,12 +82,7 @@ class User extends Authenticatable
             ->orderBy('student_number', 'desc')
             ->first();
 
-        if ($last) {
-            $lastNumber = (int) substr($last->student_number, -4);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            $nextNumber = 1;
-        }
+        $nextNumber = $last ? ((int) substr($last->student_number, -4)) + 1 : 1;
 
         return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
