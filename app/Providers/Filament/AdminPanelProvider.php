@@ -26,7 +26,8 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            // IMPORTANT: do not use Filament's own login page
+            // ->login()
             ->homeUrl('/admin')
             ->brandName('Tinahls Triad Agro')
             ->brandLogo(asset('images/logo.png'))
@@ -34,7 +35,6 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(asset('images/logo.png'))
             ->colors([
                 'primary' => Color::hex('#2E7D32'),
-                'gray' => Color::Slate,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
