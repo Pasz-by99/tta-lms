@@ -20,4 +20,4 @@ RUN composer install --no-dev --ignore-platform-reqs --optimize-autoloader \
 
 EXPOSE 10000
 
-CMD sh -c "php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force && php artisan serve --host 0.0.0.0 --port 10000"
+CMD sh -c "php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force && php artisan db:seed --class=CategorySeeder --force && php artisan db:seed --class=CourseSeeder --force && php artisan serve --host 0.0.0.0 --port 10000"
