@@ -6,9 +6,12 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Tinahls Triad Agro') - Learning Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ asset('images/logo.png') }}">
     <style>
         :root { --tta-green:#2E7D32; --tta-dark:#1B5E20; }
+        body { font-family: 'Poppins', sans-serif; }
         .bg-tta{background-color:var(--tta-green)}
         .bg-tta-dark{background-color:var(--tta-dark)}
         .text-tta{color:var(--tta-green)}
@@ -26,7 +29,6 @@
                 </div>
             </a>
 
-            {{-- Desktop menu --}}
             <div class="hidden md:flex items-center gap-5">
                 <a href="{{ url('/') }}" class="hover:text-tta font-medium">Home</a>
                 <a href="{{ url('/courses') }}" class="hover:text-tta font-medium">Courses</a>
@@ -49,7 +51,6 @@
                 @endauth
             </div>
 
-            {{-- Mobile buttons --}}
             <div class="md:hidden flex items-center gap-2">
                 @auth
                     @if(in_array(auth()->user()->role ?? '', ['admin', 'teacher']))
@@ -69,9 +70,7 @@
     </div>
 </nav>
 
-<main>
-    @yield('content')
-</main>
+<main>@yield('content')</main>
 
 <footer class="bg-tta-dark text-white mt-16">
     <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-8">
