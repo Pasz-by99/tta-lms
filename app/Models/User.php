@@ -86,4 +86,8 @@ class User extends Authenticatable implements FilamentUser
 
         return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
+    public function quizAttempts()
+{
+    return $this->hasMany(QuizAttempt::class);
+}
 }

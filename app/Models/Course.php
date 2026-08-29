@@ -48,4 +48,8 @@ class Course extends Model
                     ->withPivot('status', 'enrolled_at')
                     ->withTimestamps();
     }
+    public function quizzes()
+{
+    return $this->hasMany(Quiz::class);
+}
 }
