@@ -63,9 +63,12 @@ Route::middleware(['auth'])->prefix('student')->name('student.')->group(function
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
     Route::get('/my-courses', [StudentController::class, 'myCourses'])->name('courses');
     Route::get('/course/{slug}', [StudentController::class, 'course'])->name('course');
+    Route::get('/course/{courseSlug}/quizzes', [StudentController::class, 'quizzes'])->name('quizzes');
+Route::get('/course/{courseSlug}/quiz/{quizSlug}', [StudentController::class, 'showQuiz'])->name('quiz.show');
+Route::post('/course/{courseSlug}/quiz/{quizSlug}', [StudentController::class, 'submitQuiz'])->name('quiz.submit');
     Route::get('/course/{courseSlug}/lesson/{lessonSlug}', [StudentController::class, 'lesson'])->name('lesson');
     Route::post('/course/{courseSlug}/lesson/{lessonSlug}/complete', [StudentController::class, 'markComplete'])->name('lesson.complete');
-
+ 
     // Farm Calendars
     Route::get('/calendars', [CalendarController::class, 'index'])->name('calendars.index');
     Route::get('/calendars/{slug}', [CalendarController::class, 'show'])->name('calendars.show');
