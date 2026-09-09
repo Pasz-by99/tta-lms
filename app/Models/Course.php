@@ -56,4 +56,8 @@ class Course extends Model
 {
     return $this->hasMany(Unit::class)->orderBy('sort_order');
 }
+    public function assignments()
+{
+    return $this->hasMany(Assignment::class)->orderBy('sort_order');
+}
 }
