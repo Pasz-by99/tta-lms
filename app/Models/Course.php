@@ -52,4 +52,8 @@ class Course extends Model
 {
     return $this->hasMany(Quiz::class);
 }
+    public function units()
+{
+    return $this->hasMany(Unit::class)->orderBy('sort_order');
+}
 }
