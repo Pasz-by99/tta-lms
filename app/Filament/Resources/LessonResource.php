@@ -82,11 +82,22 @@ class LessonResource extends Resource
             ])->columns(2),
 
             Forms\Components\Section::make('Notes (type here)')->schema([
-                Forms\Components\Textarea::make('content')
+                Forms\Components\RichEditor::make('content')
                     ->label('Lesson notes')
-                    ->rows(8)
                     ->columnSpanFull()
-                    ->helperText('Type notes here. Students will see this text.'),
+                    ->toolbarButtons([
+                        'bold',
+                        'italic',
+                        'underline',
+                        'bulletList',
+                        'orderedList',
+                        'h2',
+                        'h3',
+                        'link',
+                        'undo',
+                        'redo',
+                    ])
+                    ->helperText('You can bold titles, make lists, and format notes.'),
             ]),
 
             Forms\Components\Section::make('Upload file (optional)')->schema([
