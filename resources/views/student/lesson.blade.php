@@ -34,6 +34,14 @@
             <div class="prose max-w-none text-gray-800 whitespace-pre-line mb-6">
                 {{ $lesson->content }}
             </div>
+        @elseif(!empty($lesson->description))
+            <div class="prose max-w-none text-gray-800 whitespace-pre-line mb-6">
+                {{ $lesson->description }}
+            </div>
+        @elseif(!empty($lesson->body))
+            <div class="prose max-w-none text-gray-800 whitespace-pre-line mb-6">
+                {{ $lesson->body }}
+            </div>
         @else
             <p class="text-gray-500 mb-4">No written notes for this lesson yet.</p>
         @endif
@@ -43,6 +51,7 @@
                 ?? $lesson->attachment
                 ?? $lesson->file
                 ?? $lesson->document
+                ?? $lesson->notes_file
                 ?? null;
         @endphp
 
@@ -52,7 +61,7 @@
                     <div class="font-medium text-gray-900">Downloadable notes / file</div>
                     <div class="text-sm text-gray-600">{{ basename($file) }}</div>
                 </div>
-                <a href="{{ asset('storage/' . ltrim($file, '/')) }}"
+                <a href="{{ asset('storage/' . ltrim(str_replace('public/', '', $file), '/')) }}"
                    target="_blank"
                    class="inline-block text-center bg-tta text-white px-4 py-2 rounded-lg font-medium hover:opacity-90">
                     Download
@@ -64,9 +73,7 @@
             <div class="mt-6">
                 <h3 class="font-semibold mb-2">Video</h3>
                 <div class="aspect-video rounded-lg overflow-hidden bg-black">
-                    <iframe class="w-full h-full"
-                            src="{{ $lesson->video_url }}"
-                            allowfullscreen></iframe>
+                    <iframe class="w-full h-full" src="{{ $lesson->video_url }}" allowfullscreen></iframe>
                 </div>
             </div>
         @endif
@@ -74,14 +81,14 @@
 
     <div class="bg-white rounded-xl border shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-            @if(!empty($progress) && $progress->is_completed)
+            @if(!empty($progress) && ($progress->is_completed ?? false))
                 <span class="text-green-700 font-medium">✓ Lesson completed</span>
             @else
                 <span class="text-gray-600">Mark this lesson when you finish</span>
             @endif
         </div>
 
-        @if(empty($progress) || !$progress->is_completed)
+        @if(empty($progress) || !($progress->is_completed ?? false))
             <form method="POST" action="{{ route('student.lesson.complete', [$course->slug, $lesson->slug]) }}">
                 @csrf
                 <button type="submit" class="bg-tta text-white px-5 py-2 rounded-lg font-semibold">
