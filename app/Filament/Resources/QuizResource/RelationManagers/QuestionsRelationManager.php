@@ -12,54 +12,56 @@ class QuestionsRelationManager extends RelationManager
 {
     protected static string $relationship = 'questions';
 
+    protected static ?string $title = 'Questions';
+
     public function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\Textarea::make('question_text')
-                    ->label('Question')
-                    ->required()
-                    ->rows(2)
-                    ->columnSpanFull(),
+        return $form->schema([
+            Forms\Components\Textarea::make('question_text')
+                ->label('Question')
+                ->required()
+                ->rows(2)
+                ->columnSpanFull(),
 
-                Forms\Components\Select::make('type')
-                    ->options([
-                        'multiple_choice' => 'Multiple Choice',
-                        'true_false' => 'True / False',
-                    ])
-                    ->required()
-                    ->default('multiple_choice')
-                    ->live(),
+            Forms\Components\Select::make('type')
+                ->options([
+                    'multiple_choice' => 'Multiple Choice',
+                    'true_false' => 'True / False',
+                ])
+                ->required()
+                ->default('multiple_choice')
+                ->live(),
 
-                Forms\Components\TextInput::make('points')
-                    ->numeric()
-                    ->default(1)
-                    ->required(),
+            Forms\Components\TextInput::make('points')
+                ->numeric()
+                ->default(1)
+                ->required(),
 
-                Forms\Components\TextInput::make('sort_order')
-                    ->numeric()
-                    ->default(0),
+            Forms\Components\TextInput::make('sort_order')
+                ->numeric()
+                ->default(0),
 
-                Forms\Components\Repeater::make('options')
-                    ->relationship()
-                    ->schema([
-                        Forms\Components\TextInput::make('option_text')
-                            ->label('Option')
-                            ->required(),
+            Forms\Components\Repeater::make('options')
+                ->relationship()
+                ->schema([
+                    Forms\Components\TextInput::make('option_text')
+                        ->label('Option')
+                        ->required(),
 
-                        Forms\Components\Toggle::make('is_correct')
-                            ->label('Correct answer')
-                            ->inline(false),
+                    Forms\Components\Toggle::make('is_correct')
+                        ->label('Correct answer')
+                        ->inline(false),
 
-                        Forms\Components\TextInput::make('sort_order')
-                            ->numeric()
-                            ->default(0),
-                    ])
-                    ->columns(3)
-                    ->defaultItems(2)
-                    ->addActionLabel('Add option')
-                    ->columnSpanFull(),
-            ]);
+                    Forms\Components\TextInput::make('sort_order')
+                        ->numeric()
+                        ->default(0),
+                ])
+                ->columns(3)
+                ->defaultItems(2)
+                ->addActionLabel('Add option')
+                ->columnSpanFull()
+                ->helperText('Mark the correct option(s).'),
+        ]);
     }
 
     public function table(Table $table): Table
@@ -70,20 +72,16 @@ class QuestionsRelationManager extends RelationManager
                     ->label('Question')
                     ->limit(60)
                     ->searchable(),
-
                 Tables\Columns\TextColumn::make('type'),
-
                 Tables\Columns\TextColumn::make('points'),
-
                 Tables\Columns\TextColumn::make('options_count')
                     ->counts('options')
                     ->label('Options'),
-
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('sort_order')->sortable(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label('Add question'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
