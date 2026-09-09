@@ -7,6 +7,12 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
@@ -14,14 +20,28 @@ Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{slug}', [CourseController::class, 'show'])->name('courses.show');
 
+/*
+|--------------------------------------------------------------------------
+| Auth Routes (Breeze)
+|--------------------------------------------------------------------------
+*/
+
 require __DIR__.'/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
+
         if (in_array($user->role ?? '', ['admin', 'teacher'])) {
             return redirect('/admin');
         }
+
         return redirect()->route('student.dashboard');
     })->name('dashboard');
 
@@ -30,9 +50,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Student Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware(['auth'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
     Route::get('/my-courses', [StudentController::class, 'myCourses'])->name('courses');
+
     Route::get('/course/{slug}', [StudentController::class, 'course'])->name('course');
     Route::get('/course/{courseSlug}/lesson/{lessonSlug}', [StudentController::class, 'lesson'])->name('lesson');
     Route::post('/course/{courseSlug}/lesson/{lessonSlug}/complete', [StudentController::class, 'markComplete'])->name('lesson.complete');
