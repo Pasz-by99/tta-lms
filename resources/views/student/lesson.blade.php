@@ -74,7 +74,8 @@
         @endif
     </div>
 
-    <div class="bg-white rounded-xl border shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
+    {{-- Mark complete --}}
+    <div class="bg-white rounded-xl border shadow-sm p-6 mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
             @if(!empty($progress) && ($progress->is_completed ?? false))
                 <span class="text-green-700 font-medium">✓ Lesson completed</span>
@@ -90,6 +91,45 @@
                     Mark as Completed
                 </button>
             </form>
+        @endif
+    </div>
+
+    {{-- Real next / previous item names --}}
+    <div class="grid sm:grid-cols-2 gap-3">
+        @if(!empty($previous))
+            @php
+                $prevUrl = $previous['type'] === 'lesson'
+                    ? route('student.lesson', [$course->slug, $previous['slug']])
+                    : route('student.quiz.show', [$course->slug, $previous['slug']]);
+                $prevType = $previous['type'] === 'lesson' ? 'Lesson' : 'Quiz';
+            @endphp
+            <a href="{{ $prevUrl }}"
+               class="block border rounded-xl px-4 py-4 bg-white hover:border-green-600 hover:bg-green-50 transition">
+                <div class="text-xs text-gray-500 mb-1">← Previous {{ $prevType }}</div>
+                <div class="font-bold text-gray-900 text-base">{{ $previous['title'] }}</div>
+            </a>
+        @else
+            <div class="border rounded-xl px-4 py-4 bg-gray-50 text-gray-400 text-sm">
+                No previous item
+            </div>
+        @endif
+
+        @if(!empty($next))
+            @php
+                $nextUrl = $next['type'] === 'lesson'
+                    ? route('student.lesson', [$course->slug, $next['slug']])
+                    : route('student.quiz.show', [$course->slug, $next['slug']]);
+                $nextType = $next['type'] === 'lesson' ? 'Lesson' : 'Quiz';
+            @endphp
+            <a href="{{ $nextUrl }}"
+               class="block border rounded-xl px-4 py-4 bg-white hover:border-green-600 hover:bg-green-50 transition sm:text-right">
+                <div class="text-xs text-gray-500 mb-1">Next {{ $nextType }} →</div>
+                <div class="font-bold text-gray-900 text-base">{{ $next['title'] }}</div>
+            </a>
+        @else
+            <div class="border rounded-xl px-4 py-4 bg-gray-50 text-gray-400 text-sm sm:text-right">
+                End of course content
+            </div>
         @endif
     </div>
 </div>
