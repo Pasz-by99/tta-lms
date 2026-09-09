@@ -15,7 +15,7 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ $lesson->title }}</h1>
         <div class="flex flex-wrap gap-2 text-sm text-gray-600">
             <span class="bg-gray-100 px-3 py-1 rounded-full capitalize">{{ $lesson->content_type ?? 'lesson' }}</span>
-            @if($lesson->duration_minutes)
+            @if(!empty($lesson->duration_minutes))
                 <span class="bg-gray-100 px-3 py-1 rounded-full">{{ $lesson->duration_minutes }} min</span>
             @endif
         </div>
@@ -27,11 +27,10 @@
         </div>
     @endif
 
-    {{-- Lesson content / notes --}}
     <div class="bg-white rounded-xl border shadow-sm p-6 mb-6">
         <h2 class="text-lg font-semibold mb-4">Lesson Notes</h2>
 
-        @if($lesson->content)
+        @if(!empty($lesson->content))
             <div class="prose max-w-none text-gray-800 whitespace-pre-line mb-6">
                 {{ $lesson->content }}
             </div>
@@ -39,25 +38,28 @@
             <p class="text-gray-500 mb-4">No written notes for this lesson yet.</p>
         @endif
 
-        {{-- Downloadable file --}}
-        @if(!empty($lesson->file_path) || !empty($lesson->attachment) || !empty($lesson->file))
-            @php
-                $file = $lesson->file_path ?? $lesson->attachment ?? $lesson->file;
-            @endphp
-            <div class="border rounded-lg p-4 bg-green-50 flex items-center justify-between gap-4">
+        @php
+            $file = $lesson->file_path
+                ?? $lesson->attachment
+                ?? $lesson->file
+                ?? $lesson->document
+                ?? null;
+        @endphp
+
+        @if(!empty($file))
+            <div class="border rounded-lg p-4 bg-green-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <div class="font-medium text-gray-900">Lesson file / notes</div>
-                    <div class="text-sm text-gray-600">Click to download</div>
+                    <div class="font-medium text-gray-900">Downloadable notes / file</div>
+                    <div class="text-sm text-gray-600">{{ basename($file) }}</div>
                 </div>
                 <a href="{{ asset('storage/' . ltrim($file, '/')) }}"
                    target="_blank"
-                   class="bg-tta text-white px-4 py-2 rounded-lg font-medium hover:opacity-90">
+                   class="inline-block text-center bg-tta text-white px-4 py-2 rounded-lg font-medium hover:opacity-90">
                     Download
                 </a>
             </div>
         @endif
 
-        {{-- Video --}}
         @if(!empty($lesson->video_url))
             <div class="mt-6">
                 <h3 class="font-semibold mb-2">Video</h3>
@@ -70,17 +72,16 @@
         @endif
     </div>
 
-    {{-- Mark complete --}}
     <div class="bg-white rounded-xl border shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-            @if($progress && $progress->is_completed)
+            @if(!empty($progress) && $progress->is_completed)
                 <span class="text-green-700 font-medium">✓ Lesson completed</span>
             @else
                 <span class="text-gray-600">Mark this lesson when you finish</span>
             @endif
         </div>
 
-        @if(!$progress || !$progress->is_completed)
+        @if(empty($progress) || !$progress->is_completed)
             <form method="POST" action="{{ route('student.lesson.complete', [$course->slug, $lesson->slug]) }}">
                 @csrf
                 <button type="submit" class="bg-tta text-white px-5 py-2 rounded-lg font-semibold">
