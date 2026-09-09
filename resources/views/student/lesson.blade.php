@@ -18,6 +18,9 @@
             @if(!empty($lesson->duration_minutes))
                 <span class="bg-gray-100 px-3 py-1 rounded-full">{{ $lesson->duration_minutes }} min</span>
             @endif
+            @if($lesson->unit)
+                <span class="bg-green-100 text-tta px-3 py-1 rounded-full">{{ $lesson->unit->title }}</span>
+            @endif
         </div>
     </div>
 
@@ -31,16 +34,8 @@
         <h2 class="text-lg font-semibold mb-4">Lesson Notes</h2>
 
         @if(!empty($lesson->content))
-            <div class="prose max-w-none text-gray-800 whitespace-pre-line mb-6">
-                {{ $lesson->content }}
-            </div>
-        @elseif(!empty($lesson->description))
-            <div class="prose max-w-none text-gray-800 whitespace-pre-line mb-6">
-                {{ $lesson->description }}
-            </div>
-        @elseif(!empty($lesson->body))
-            <div class="prose max-w-none text-gray-800 whitespace-pre-line mb-6">
-                {{ $lesson->body }}
+            <div class="prose max-w-none text-gray-800 mb-6">
+                {!! $lesson->content !!}
             </div>
         @else
             <p class="text-gray-500 mb-4">No written notes for this lesson yet.</p>
