@@ -14,10 +14,10 @@ WORKDIR /var/www
 COPY . .
 
 RUN composer install --no-dev --ignore-platform-reqs --optimize-autoloader \
- && mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+ && mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views storage/logs storage/app/public bootstrap/cache \
  && touch database/database.sqlite \
  && chmod -R 777 database storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD sh -c "php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force && php artisan db:seed --class=CategorySeeder --force && php artisan db:seed --class=CourseSeeder --force && php artisan serve --host 0.0.0.0 --port 10000"
+CMD sh -c "php artisan migrate --force && php artisan storage:link || true && php artisan db:seed --class=AdminUserSeeder --force && php artisan db:seed --class=CategorySeeder --force && php artisan db:seed --class=CourseSeeder --force && php artisan serve --host 0.0.0.0 --port 10000"
