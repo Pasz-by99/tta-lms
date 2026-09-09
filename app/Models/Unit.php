@@ -43,4 +43,8 @@ class Unit extends Model
     {
         return $this->hasMany(Quiz::class)->orderBy('sort_order');
     }
+    public function assignments()
+{
+    return $this->hasMany(Assignment::class)->orderBy('sort_order');
+}
 }
