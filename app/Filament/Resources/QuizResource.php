@@ -5,8 +5,10 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\QuizResource\Pages;
 use App\Models\Course;
 use App\Models\Quiz;
+use App\Models\Unit;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -29,7 +31,22 @@ class QuizResource extends Resource
                     ->label('Course')
                     ->options(Course::query()->pluck('title', 'id'))
                     ->required()
-                    ->searchable(),
+                    ->searchable()
+                    ->live(),
+
+                Forms\Components\Select::make('unit_id')
+                    ->label('Unit / Module')
+                    ->options(function (Get $get) {
+                        $courseId = $get('course_id');
+                        if (!$courseId) {
+                            return [];
+                        }
+                        return Unit::where('course_id', $courseId)
+                            ->orderBy('sort_order')
+                            ->pluck('title', 'id');
+                    })
+                    ->searchable()
+                    ->helperText('Optional: attach quiz to a unit'),
 
                 Forms\Components\TextInput::make('title')
                     ->required()
@@ -79,12 +96,12 @@ class QuizResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('title')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('course.title')->label('Course')->searchable(),
+                Tables\Columns\TextColumn::make('course.title')->label('Course'),
+                Tables\Columns\TextColumn::make('unit.title')->label('Unit'),
                 Tables\Columns\TextColumn::make('type')->badge(),
                 Tables\Columns\TextColumn::make('questions_count')->counts('questions')->label('Questions'),
                 Tables\Columns\TextColumn::make('pass_percentage')->suffix('%'),
                 Tables\Columns\IconColumn::make('is_published')->boolean()->label('Published'),
-                Tables\Columns\TextColumn::make('created_at')->dateTime()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
