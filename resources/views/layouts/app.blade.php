@@ -12,9 +12,9 @@
     <style>
         :root { --tta-green:#2E7D32; --tta-dark:#1B5E20; }
         body { font-family: 'Poppins', sans-serif; }
-        .bg-tta{background-color:var(--tta-green)}
-        .bg-tta-dark{background-color:var(--tta-dark)}
-        .text-tta{color:var(--tta-green)}
+        .bg-tta { background-color: var(--tta-green); }
+        .bg-tta-dark { background-color: var(--tta-dark); }
+        .text-tta { color: var(--tta-green); }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased">
@@ -29,6 +29,7 @@
                 </div>
             </a>
 
+            {{-- Desktop menu --}}
             <div class="hidden md:flex items-center gap-5">
                 <a href="{{ url('/') }}" class="hover:text-tta font-medium">Home</a>
                 <a href="{{ url('/courses') }}" class="hover:text-tta font-medium">Courses</a>
@@ -39,8 +40,8 @@
                     @if(in_array(auth()->user()->role ?? '', ['admin', 'teacher']))
                         <a href="{{ url('/admin') }}" class="bg-tta text-white px-4 py-2 rounded-lg">Admin</a>
                     @else
-                        <a href="{{ url('/student/dashboard') }}" class="hover:text-tta font-medium">My Learning</a>
-                        <a href="{{ url('/student/calendars') }}" class="hover:text-tta font-medium">Farm Calendars</a>
+                        <a href="{{ route('student.dashboard') }}" class="hover:text-tta font-medium">My Learning</a>
+                        <a href="{{ route('student.calendars') }}" class="hover:text-tta font-medium">Farm Calendars</a>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -51,12 +52,13 @@
                 @endauth
             </div>
 
+            {{-- Mobile menu --}}
             <div class="md:hidden flex items-center gap-2">
                 @auth
                     @if(in_array(auth()->user()->role ?? '', ['admin', 'teacher']))
                         <a href="{{ url('/admin') }}" class="bg-tta text-white text-sm px-3 py-2 rounded-lg font-semibold">Admin</a>
                     @else
-                        <a href="{{ url('/student/dashboard') }}" class="text-tta text-sm font-semibold">My Learning</a>
+                        <a href="{{ route('student.dashboard') }}" class="text-tta text-sm font-semibold">My Learning</a>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -70,7 +72,9 @@
     </div>
 </nav>
 
-<main>@yield('content')</main>
+<main>
+    @yield('content')
+</main>
 
 <footer class="bg-tta-dark text-white mt-16">
     <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-3 gap-8">
@@ -85,7 +89,8 @@
                 <a href="{{ url('/courses') }}" class="block hover:underline">Courses</a>
                 <a href="{{ url('/contact') }}" class="block hover:underline">Contact</a>
                 @auth
-                    <a href="{{ url('/student/dashboard') }}" class="block hover:underline">My Learning</a>
+                    <a href="{{ route('student.dashboard') }}" class="block hover:underline">My Learning</a>
+                    <a href="{{ route('student.calendars') }}" class="block hover:underline">Farm Calendars</a>
                 @else
                     <a href="{{ route('login') }}" class="block hover:underline">Login</a>
                 @endauth
@@ -101,5 +106,6 @@
         </div>
     </div>
 </footer>
+
 </body>
 </html>
