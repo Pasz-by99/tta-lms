@@ -19,9 +19,14 @@ class AssignmentResource extends Resource
     protected static ?string $model = Assignment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?string $navigationGroup = 'Learning';
+
     protected static ?string $navigationLabel = 'Assignments';
+
     protected static ?int $navigationSort = 6;
+
+    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
     {
@@ -41,6 +46,7 @@ class AssignmentResource extends Resource
                         if (!$courseId) {
                             return [];
                         }
+
                         return Unit::where('course_id', $courseId)
                             ->orderBy('sort_order')
                             ->pluck('title', 'id');
@@ -117,7 +123,7 @@ class AssignmentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Resources\AssignmentResource\RelationManagers\SubmissionsRelationManager::class,
+            // Submissions relation can be added after menu appears
         ];
     }
 
