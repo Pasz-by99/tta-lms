@@ -39,32 +39,55 @@ class StudentController extends Controller
     }
 
     public function course($slug)
-    {
-        $user = auth()->user();
-        $course = Course::where('slug', $slug)->firstOrFail();
+{
+    $user = auth()->user();
+    $course = Course::where('slug', $slug)->firstOrFail();
 
-        $enrollment = Enrollment::where('user_id', $user->id)
-            ->where('course_id', $course->id)
-            ->first();
+    $enrollment = Enrollment::where('user_id', $user->id)
+        ->where('course_id', $course->id)
+        ->first();
 
-        if (!$enrollment) {
-            abort(403, 'You are not enrolled in this course.');
-        }
-
-        $lessons = $course->lessons()
-            ->where('is_published', true)
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
-
-        $progressItems = LessonProgress::where('user_id', $user->id)
-            ->whereIn('lesson_id', $lessons->pluck('id'))
-            ->get()
-            ->keyBy('lesson_id');
-
-        return view('student.course', compact('course', 'lessons', 'enrollment', 'progressItems'));
+    if (!$enrollment) {
+        abort(403, 'You are not enrolled in this course.');
     }
 
+    $units = $course->units()
+        ->where('is_published', true)
+        ->with([
+            'lessons' => function ($q) {
+                $q->where('is_published', true)->orderBy('sort_order');
+            },
+            'quizzes' => function ($q) {
+                $q->where('is_published', true)->orderBy('sort_order');
+            },
+        ])
+        ->orderBy('sort_order')
+        ->get();
+
+    $orphanLessons = $course->lessons()
+        ->where('is_published', true)
+        ->whereNull('unit_id')
+        ->orderBy('sort_order')
+        ->get();
+
+    $allLessonIds = $units->pluck('lessons')->flatten()->pluck('id')
+        ->merge($orphanLessons->pluck('id'))
+        ->unique()
+        ->values();
+
+    $progressItems = LessonProgress::where('user_id', $user->id)
+        ->whereIn('lesson_id', $allLessonIds)
+        ->get()
+        ->keyBy('lesson_id');
+
+    return view('student.course', compact(
+        'course',
+        'units',
+        'orphanLessons',
+        'enrollment',
+        'progressItems'
+    ));
+}
     public function lesson($courseSlug, $lessonSlug)
     {
         $user = auth()->user();
