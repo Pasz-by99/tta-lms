@@ -39,55 +39,58 @@ class StudentController extends Controller
     }
 
     public function course($slug)
-{
-    $user = auth()->user();
-    $course = Course::where('slug', $slug)->firstOrFail();
+    {
+        $user = auth()->user();
+        $course = Course::where('slug', $slug)->firstOrFail();
 
-    $enrollment = Enrollment::where('user_id', $user->id)
-        ->where('course_id', $course->id)
-        ->first();
+        $enrollment = Enrollment::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
 
-    if (!$enrollment) {
-        abort(403, 'You are not enrolled in this course.');
+        if (!$enrollment) {
+            abort(403, 'You are not enrolled in this course.');
+        }
+
+        $units = $course->units()
+            ->where('is_published', true)
+            ->with([
+                'lessons' => function ($q) {
+                    $q->where('is_published', true)->orderBy('sort_order')->orderBy('id');
+                },
+                'quizzes' => function ($q) {
+                    $q->where('is_published', true)->orderBy('sort_order')->orderBy('id');
+                },
+            ])
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        $orphanLessons = $course->lessons()
+            ->where('is_published', true)
+            ->whereNull('unit_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        $allLessonIds = $units->pluck('lessons')->flatten()->pluck('id')
+            ->merge($orphanLessons->pluck('id'))
+            ->unique()
+            ->values();
+
+        $progressItems = LessonProgress::where('user_id', $user->id)
+            ->whereIn('lesson_id', $allLessonIds)
+            ->get()
+            ->keyBy('lesson_id');
+
+        return view('student.course', compact(
+            'course',
+            'units',
+            'orphanLessons',
+            'enrollment',
+            'progressItems'
+        ));
     }
 
-    $units = $course->units()
-        ->where('is_published', true)
-        ->with([
-            'lessons' => function ($q) {
-                $q->where('is_published', true)->orderBy('sort_order');
-            },
-            'quizzes' => function ($q) {
-                $q->where('is_published', true)->orderBy('sort_order');
-            },
-        ])
-        ->orderBy('sort_order')
-        ->get();
-
-    $orphanLessons = $course->lessons()
-        ->where('is_published', true)
-        ->whereNull('unit_id')
-        ->orderBy('sort_order')
-        ->get();
-
-    $allLessonIds = $units->pluck('lessons')->flatten()->pluck('id')
-        ->merge($orphanLessons->pluck('id'))
-        ->unique()
-        ->values();
-
-    $progressItems = LessonProgress::where('user_id', $user->id)
-        ->whereIn('lesson_id', $allLessonIds)
-        ->get()
-        ->keyBy('lesson_id');
-
-    return view('student.course', compact(
-        'course',
-        'units',
-        'orphanLessons',
-        'enrollment',
-        'progressItems'
-    ));
-}
     public function lesson($courseSlug, $lessonSlug)
     {
         $user = auth()->user();
@@ -110,7 +113,88 @@ class StudentController extends Controller
             ->where('lesson_id', $lesson->id)
             ->first();
 
-        return view('student.lesson', compact('course', 'lesson', 'progress', 'enrollment'));
+        // Ordered path: unit lessons + unit quizzes, then orphans
+        $units = $course->units()
+            ->where('is_published', true)
+            ->with([
+                'lessons' => fn ($q) => $q->where('is_published', true)->orderBy('sort_order')->orderBy('id'),
+                'quizzes' => fn ($q) => $q->where('is_published', true)->orderBy('sort_order')->orderBy('id'),
+            ])
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        $path = collect();
+
+        foreach ($units as $unit) {
+            foreach ($unit->lessons as $item) {
+                $path->push([
+                    'type' => 'lesson',
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'slug' => $item->slug,
+                ]);
+            }
+            foreach ($unit->quizzes as $item) {
+                $path->push([
+                    'type' => 'quiz',
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'slug' => $item->slug,
+                ]);
+            }
+        }
+
+        $course->lessons()
+            ->where('is_published', true)
+            ->whereNull('unit_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->each(function ($item) use ($path) {
+                $path->push([
+                    'type' => 'lesson',
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'slug' => $item->slug,
+                ]);
+            });
+
+        Quiz::where('course_id', $course->id)
+            ->where('is_published', true)
+            ->whereNull('unit_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->each(function ($item) use ($path) {
+                $path->push([
+                    'type' => 'quiz',
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'slug' => $item->slug,
+                ]);
+            });
+
+        $currentIndex = $path->search(function ($item) use ($lesson) {
+            return $item['type'] === 'lesson' && $item['id'] === $lesson->id;
+        });
+
+        $previous = ($currentIndex !== false && $currentIndex > 0)
+            ? $path[$currentIndex - 1]
+            : null;
+
+        $next = ($currentIndex !== false && $currentIndex < $path->count() - 1)
+            ? $path[$currentIndex + 1]
+            : null;
+
+        return view('student.lesson', compact(
+            'course',
+            'lesson',
+            'progress',
+            'enrollment',
+            'previous',
+            'next'
+        ));
     }
 
     public function markComplete(Request $request, $courseSlug, $lessonSlug)
@@ -142,7 +226,6 @@ class StudentController extends Controller
             ]
         );
 
-        // Auto certificate when all published lessons completed
         $publishedLessonIds = $course->lessons()->where('is_published', true)->pluck('id');
         $completedCount = LessonProgress::where('user_id', $user->id)
             ->whereIn('lesson_id', $publishedLessonIds)
