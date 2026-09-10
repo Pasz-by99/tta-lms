@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
 use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Enrollment;
@@ -60,6 +62,9 @@ class StudentController extends Controller
                 'quizzes' => function ($q) {
                     $q->where('is_published', true)->orderBy('sort_order')->orderBy('id');
                 },
+                'assignments' => function ($q) {
+                    $q->where('is_published', true)->orderBy('sort_order')->orderBy('id');
+                },
             ])
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -113,12 +118,12 @@ class StudentController extends Controller
             ->where('lesson_id', $lesson->id)
             ->first();
 
-        // Ordered path: unit lessons + unit quizzes, then orphans
         $units = $course->units()
             ->where('is_published', true)
             ->with([
                 'lessons' => fn ($q) => $q->where('is_published', true)->orderBy('sort_order')->orderBy('id'),
                 'quizzes' => fn ($q) => $q->where('is_published', true)->orderBy('sort_order')->orderBy('id'),
+                'assignments' => fn ($q) => $q->where('is_published', true)->orderBy('sort_order')->orderBy('id'),
             ])
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -138,6 +143,14 @@ class StudentController extends Controller
             foreach ($unit->quizzes as $item) {
                 $path->push([
                     'type' => 'quiz',
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'slug' => $item->slug,
+                ]);
+            }
+            foreach ($unit->assignments as $item) {
+                $path->push([
+                    'type' => 'assignment',
                     'id' => $item->id,
                     'title' => $item->title,
                     'slug' => $item->slug,
@@ -169,6 +182,21 @@ class StudentController extends Controller
             ->each(function ($item) use ($path) {
                 $path->push([
                     'type' => 'quiz',
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'slug' => $item->slug,
+                ]);
+            });
+
+        Assignment::where('course_id', $course->id)
+            ->where('is_published', true)
+            ->whereNull('unit_id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->each(function ($item) use ($path) {
+                $path->push([
+                    'type' => 'assignment',
                     'id' => $item->id,
                     'title' => $item->title,
                     'slug' => $item->slug,
@@ -225,27 +253,6 @@ class StudentController extends Controller
                 'completed_at' => now(),
             ]
         );
-
-        $publishedLessonIds = $course->lessons()->where('is_published', true)->pluck('id');
-        $completedCount = LessonProgress::where('user_id', $user->id)
-            ->whereIn('lesson_id', $publishedLessonIds)
-            ->where('is_completed', true)
-            ->count();
-
-        if ($publishedLessonIds->count() > 0 && $completedCount >= $publishedLessonIds->count()) {
-            Certificate::firstOrCreate(
-                [
-                    'user_id' => $user->id,
-                    'course_id' => $course->id,
-                ],
-                [
-                    'certificate_number' => 'TTA-' . $course->id . '-' . $user->id . '-' . now()->format('Ymd'),
-                    'issued_at' => now(),
-                ]
-            );
-
-            $enrollment->update(['status' => 'completed']);
-        }
 
         return back()->with('success', 'Lesson marked as completed.');
     }
@@ -358,5 +365,115 @@ class StudentController extends Controller
         return redirect()
             ->route('student.quiz.show', [$course->slug, $quiz->slug])
             ->with('success', "Quiz submitted. Score: {$score}/{$total} ({$percentage}%). " . ($passed ? 'Passed' : 'Not passed'));
+    }
+
+    public function showAssignment($courseSlug, $assignmentSlug)
+    {
+        $user = auth()->user();
+        $course = Course::where('slug', $courseSlug)->firstOrFail();
+
+        $enrollment = Enrollment::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
+
+        if (!$enrollment) {
+            abort(403, 'You are not enrolled in this course.');
+        }
+
+        $assignment = Assignment::where('course_id', $course->id)
+            ->where('slug', $assignmentSlug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        return view('student.assignment', compact('course', 'assignment', 'submission'));
+    }
+
+    public function submitAssignment(Request $request, $courseSlug, $assignmentSlug)
+    {
+        $user = auth()->user();
+        $course = Course::where('slug', $courseSlug)->firstOrFail();
+
+        $enrollment = Enrollment::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
+
+        if (!$enrollment) {
+            abort(403, 'You are not enrolled in this course.');
+        }
+
+        $assignment = Assignment::where('course_id', $course->id)
+            ->where('slug', $assignmentSlug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $request->validate([
+            'content' => 'nullable|string',
+            'file' => 'nullable|file|max:20480',
+        ]);
+
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('assignment-submissions', 'public');
+        }
+
+        $data = [
+            'content' => $request->input('content'),
+            'status' => 'submitted',
+            'submitted_at' => now(),
+            'score' => null,
+            'feedback' => null,
+            'graded_at' => null,
+        ];
+
+        if ($filePath) {
+            $data['file_path'] = $filePath;
+        }
+
+        AssignmentSubmission::updateOrCreate(
+            [
+                'assignment_id' => $assignment->id,
+                'user_id' => $user->id,
+            ],
+            $data
+        );
+
+        return back()->with('success', 'Assignment submitted successfully. Waiting for teacher to mark.');
+    }
+
+    public function grades($courseSlug)
+    {
+        $user = auth()->user();
+        $course = Course::where('slug', $courseSlug)->firstOrFail();
+
+        $enrollment = Enrollment::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
+
+        if (!$enrollment) {
+            abort(403, 'You are not enrolled in this course.');
+        }
+
+        $quizAttempts = QuizAttempt::with('quiz')
+            ->where('user_id', $user->id)
+            ->whereHas('quiz', function ($q) use ($course) {
+                $q->where('course_id', $course->id);
+            })
+            ->latest()
+            ->get()
+            ->unique('quiz_id')
+            ->values();
+
+        $assignmentSubmissions = AssignmentSubmission::with('assignment')
+            ->where('user_id', $user->id)
+            ->whereHas('assignment', function ($q) use ($course) {
+                $q->where('course_id', $course->id);
+            })
+            ->get();
+
+        return view('student.grades', compact('course', 'quizAttempts', 'assignmentSubmissions'));
     }
 }
