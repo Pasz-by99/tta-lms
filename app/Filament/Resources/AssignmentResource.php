@@ -19,13 +19,9 @@ class AssignmentResource extends Resource
     protected static ?string $model = Assignment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
     protected static ?string $navigationGroup = 'Learning';
-
     protected static ?string $navigationLabel = 'Assignments';
-
     protected static ?int $navigationSort = 6;
-
     protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
@@ -46,7 +42,6 @@ class AssignmentResource extends Resource
                         if (!$courseId) {
                             return [];
                         }
-
                         return Unit::where('course_id', $courseId)
                             ->orderBy('sort_order')
                             ->pluck('title', 'id');
@@ -58,8 +53,7 @@ class AssignmentResource extends Resource
                     ->live(onBlur: true)
                     ->afterStateUpdated(fn ($state, callable $set) => $set('slug', Str::slug($state))),
 
-                Forms\Components\TextInput::make('slug')
-                    ->required(),
+                Forms\Components\TextInput::make('slug')->required(),
 
                 Forms\Components\RichEditor::make('instructions')
                     ->label('Instructions')
@@ -73,26 +67,11 @@ class AssignmentResource extends Resource
                     ->downloadable()
                     ->openable(),
 
-                Forms\Components\TextInput::make('max_score')
-                    ->numeric()
-                    ->default(100)
-                    ->required(),
-
-                Forms\Components\TextInput::make('pass_score')
-                    ->numeric()
-                    ->default(50)
-                    ->required(),
-
-                Forms\Components\DateTimePicker::make('due_at')
-                    ->label('Due date'),
-
-                Forms\Components\TextInput::make('sort_order')
-                    ->numeric()
-                    ->default(0),
-
-                Forms\Components\Toggle::make('is_published')
-                    ->label('Published')
-                    ->default(false),
+                Forms\Components\TextInput::make('max_score')->numeric()->default(100)->required(),
+                Forms\Components\TextInput::make('pass_score')->numeric()->default(50)->required(),
+                Forms\Components\DateTimePicker::make('due_at')->label('Due date'),
+                Forms\Components\TextInput::make('sort_order')->numeric()->default(0),
+                Forms\Components\Toggle::make('is_published')->label('Published')->default(false),
             ])->columns(2),
         ]);
     }
@@ -123,7 +102,7 @@ class AssignmentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            // Submissions relation can be added after menu appears
+            \App\Filament\Resources\AssignmentResource\RelationManagers\SubmissionsRelationManager::class,
         ];
     }
 
