@@ -68,6 +68,14 @@ Route::middleware(['auth'])->prefix('student')->name('student.')->group(function
     Route::get('/course/{courseSlug}/quiz/{quizSlug}', [StudentController::class, 'showQuiz'])->name('quiz.show');
     Route::post('/course/{courseSlug}/quiz/{quizSlug}', [StudentController::class, 'submitQuiz'])->name('quiz.submit');
 
+    // Assignments
+    Route::get('/course/{courseSlug}/assignment/{assignmentSlug}', [StudentController::class, 'showAssignment'])->name('assignment.show');
+    Route::post('/course/{courseSlug}/assignment/{assignmentSlug}', [StudentController::class, 'submitAssignment'])->name('assignment.submit');
+
+    // Grades
+    Route::get('/course/{courseSlug}/grades', [StudentController::class, 'grades'])->name('grades');
+
+    // Calendars
     Route::get('/calendars', [CalendarController::class, 'index'])->name('calendars');
     Route::get('/calendars/{id}', [CalendarController::class, 'show'])->name('calendars.show');
 });
