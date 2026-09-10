@@ -11,20 +11,13 @@ use Filament\Tables\Table;
 class SubmissionsRelationManager extends RelationManager
 {
     protected static string $relationship = 'submissions';
-
     protected static ?string $title = 'Student Submissions';
 
     public function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('score')
-                ->numeric()
-                ->required(),
-
-            Forms\Components\Textarea::make('feedback')
-                ->rows(4)
-                ->columnSpanFull(),
-
+            Forms\Components\TextInput::make('score')->numeric()->required(),
+            Forms\Components\Textarea::make('feedback')->rows(4)->columnSpanFull(),
             Forms\Components\Select::make('status')
                 ->options([
                     'submitted' => 'Submitted',
