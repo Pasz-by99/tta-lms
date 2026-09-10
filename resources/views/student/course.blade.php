@@ -7,7 +7,17 @@
     <div class="bg-tta text-white rounded-2xl p-6 mb-8">
         <div class="text-sm text-green-100 mb-1">{{ $course->category->name ?? 'Course' }}</div>
         <h1 class="text-3xl font-bold mb-2">{{ $course->title }}</h1>
-        <p class="text-green-50">{{ $course->short_description }}</p>
+        <p class="text-green-50 mb-4">{{ $course->short_description }}</p>
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('student.grades', $course->slug) }}"
+               class="bg-white text-tta px-4 py-2 rounded-lg text-sm font-semibold">
+                Grades
+            </a>
+            <a href="{{ route('student.dashboard') }}"
+               class="bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                My Learning
+            </a>
+        </div>
     </div>
 
     @if($units->isEmpty())
@@ -18,17 +28,14 @@
         <div class="space-y-4">
             @foreach($units as $unit)
                 <div class="bg-white border rounded-xl overflow-hidden">
-                    <div class="bg-gray-50 px-5 py-4 border-b flex items-center justify-between">
-                        <div>
-                            <h2 class="font-bold text-lg text-gray-900">{{ $unit->title }}</h2>
-                            @if($unit->description)
-                                <p class="text-sm text-gray-600 mt-1">{{ $unit->description }}</p>
-                            @endif
-                        </div>
+                    <div class="bg-gray-50 px-5 py-4 border-b">
+                        <h2 class="font-bold text-lg text-gray-900">{{ $unit->title }}</h2>
+                        @if($unit->description)
+                            <p class="text-sm text-gray-600 mt-1">{{ $unit->description }}</p>
+                        @endif
                     </div>
 
                     <div class="divide-y">
-                        {{-- Lessons --}}
                         @forelse($unit->lessons as $lesson)
                             @php
                                 $done = isset($progressItems[$lesson->id]) && ($progressItems[$lesson->id]->is_completed ?? false);
@@ -36,15 +43,10 @@
                             <a href="{{ route('student.lesson', [$course->slug, $lesson->slug]) }}"
                                class="flex items-center justify-between gap-3 px-5 py-4 hover:bg-green-50 transition">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-green-100 text-tta flex items-center justify-center text-sm font-bold">
-                                        L
-                                    </div>
+                                    <div class="w-8 h-8 rounded-full bg-green-100 text-tta flex items-center justify-center text-sm font-bold">L</div>
                                     <div>
                                         <div class="font-medium text-gray-900">{{ $lesson->title }}</div>
-                                        <div class="text-xs text-gray-500 capitalize">
-                                            Lesson
-                                            @if(!empty($lesson->file_path)) · File available @endif
-                                        </div>
+                                        <div class="text-xs text-gray-500">Lesson</div>
                                     </div>
                                 </div>
                                 <div class="text-sm">
@@ -56,25 +58,34 @@
                                 </div>
                             </a>
                         @empty
-                            <div class="px-5 py-4 text-sm text-gray-400">No lessons in this unit yet.</div>
+                            <div class="px-5 py-3 text-sm text-gray-400">No lessons in this unit yet.</div>
                         @endforelse
 
-                        {{-- Quizzes --}}
                         @foreach($unit->quizzes as $quiz)
                             <a href="{{ route('student.quiz.show', [$course->slug, $quiz->slug]) }}"
                                class="flex items-center justify-between gap-3 px-5 py-4 hover:bg-green-50 transition">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-bold">
-                                        Q
-                                    </div>
+                                    <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-bold">Q</div>
                                     <div>
                                         <div class="font-medium text-gray-900">{{ $quiz->title }}</div>
-                                        <div class="text-xs text-gray-500 capitalize">
-                                            {{ $quiz->type }} · Pass {{ $quiz->pass_percentage }}%
-                                        </div>
+                                        <div class="text-xs text-gray-500 capitalize">{{ $quiz->type }} · Pass {{ $quiz->pass_percentage }}%</div>
                                     </div>
                                 </div>
                                 <span class="text-tta text-sm font-medium">Start →</span>
+                            </a>
+                        @endforeach
+
+                        @foreach($unit->assignments as $assignment)
+                            <a href="{{ route('student.assignment.show', [$course->slug, $assignment->slug]) }}"
+                               class="flex items-center justify-between gap-3 px-5 py-4 hover:bg-green-50 transition">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">A</div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ $assignment->title }}</div>
+                                        <div class="text-xs text-gray-500">Assignment · Pass {{ $assignment->pass_score }}/{{ $assignment->max_score }}</div>
+                                    </div>
+                                </div>
+                                <span class="text-tta text-sm font-medium">Open →</span>
                             </a>
                         @endforeach
                     </div>
@@ -83,7 +94,6 @@
         </div>
     @endif
 
-    {{-- Lessons without unit (fallback) --}}
     @if($orphanLessons->isNotEmpty())
         <div class="mt-6 bg-white border rounded-xl overflow-hidden">
             <div class="bg-gray-50 px-5 py-4 border-b font-bold">Other lessons</div>
