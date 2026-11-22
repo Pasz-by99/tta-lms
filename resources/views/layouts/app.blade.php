@@ -16,37 +16,40 @@
     <meta name="apple-mobile-web-app-title" content="TTA Learning">
     <link rel="apple-touch-icon" href="/images/icons/icon-192.png">
 
-    {{-- Styles --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        :root {
-            --tta: #2E7D32;
-            --tta-dark: #1B5E20;
+    {{-- Tailwind CDN (safe for Render) --}}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tta: '#2E7D32',
+                        'tta-dark': '#1B5E20',
+                    }
+                }
+            }
         }
-        .bg-tta { background-color: var(--tta); }
-        .text-tta { color: var(--tta); }
-        .hover\:bg-tta-dark:hover { background-color: var(--tta-dark); }
-        .hover\:text-tta:hover { color: var(--tta); }
-        .border-tta { border-color: var(--tta); }
+    </script>
+    <style>
+        .bg-tta { background-color: #2E7D32; }
+        .text-tta { color: #2E7D32; }
+        .hover\:bg-tta-dark:hover { background-color: #1B5E20; }
+        .hover\:text-tta:hover { color: #2E7D32; }
     </style>
 </head>
 <body class="font-sans antialiased bg-gray-50 text-gray-900">
 
-    {{-- Navbar --}}
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('home') }}" class="flex items-center gap-3">
-                        <img src="{{ asset('images/logo.png') }}" alt="TTA Logo" class="h-12 w-auto">
-                        <div class="hidden sm:block">
-                            <div class="font-bold text-lg text-tta leading-tight">Tinahls Triad Agro</div>
-                            <div class="text-xs text-gray-500">Learning Platform</div>
-                        </div>
-                    </a>
-                </div>
+                <a href="{{ route('home') }}" class="flex items-center gap-3">
+                    <img src="{{ asset('images/logo.png') }}" alt="TTA Logo" class="h-12 w-auto">
+                    <div class="hidden sm:block">
+                        <div class="font-bold text-lg text-tta leading-tight">Tinahls Triad Agro</div>
+                        <div class="text-xs text-gray-500">Learning Platform</div>
+                    </div>
+                </a>
 
-                {{-- Desktop menu --}}
                 <div class="hidden md:flex items-center gap-6">
                     <a href="{{ route('home') }}" class="hover:text-tta font-medium">Home</a>
                     <a href="{{ route('courses.index') }}" class="hover:text-tta font-medium">Courses</a>
@@ -59,12 +62,9 @@
                         @else
                             <a href="{{ route('student.dashboard') }}" class="hover:text-tta font-medium">My Learning</a>
                         @endif
-
                         <form method="POST" action="{{ route('logout') }}" class="inline">
                             @csrf
-                            <button type="submit" class="text-red-600 hover:text-red-800 font-medium">
-                                Logout
-                            </button>
+                            <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Logout</button>
                         </form>
                     @else
                         <a href="{{ route('login') }}" class="bg-tta text-white px-5 py-2 rounded-lg hover:bg-tta-dark transition font-medium">
@@ -73,7 +73,6 @@
                     @endauth
                 </div>
 
-                {{-- Mobile menu button --}}
                 <div class="md:hidden">
                     <button type="button" id="mobile-menu-button" class="p-2 rounded-md text-gray-700 hover:bg-gray-100">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,7 +83,6 @@
             </div>
         </div>
 
-        {{-- Mobile menu --}}
         <div id="mobile-menu" class="hidden md:hidden border-t bg-white">
             <div class="px-4 py-3 space-y-2">
                 <a href="{{ route('home') }}" class="block py-2 hover:text-tta font-medium">Home</a>
@@ -109,12 +107,10 @@
         </div>
     </nav>
 
-    {{-- Main content --}}
     <main>
         @yield('content')
     </main>
 
-    {{-- Footer --}}
     <footer class="bg-tta text-white mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid md:grid-cols-3 gap-8">
             <div>
@@ -123,7 +119,6 @@
                     Empowering farmers and agripreneurs through practical agricultural training in Namibia.
                 </p>
             </div>
-
             <div>
                 <h3 class="font-bold text-lg mb-4">Quick Links</h3>
                 <ul class="space-y-2 text-sm">
@@ -133,7 +128,6 @@
                     <li><a href="{{ route('contact') }}" class="hover:underline">Contact</a></li>
                 </ul>
             </div>
-
             <div>
                 <h3 class="font-bold text-lg mb-4">Contact Us</h3>
                 <ul class="space-y-2 text-sm text-gray-200">
@@ -149,24 +143,18 @@
         </div>
     </footer>
 
-    {{-- Mobile menu toggle --}}
     <script>
         document.getElementById('mobile-menu-button')?.addEventListener('click', function () {
             document.getElementById('mobile-menu')?.classList.toggle('hidden');
         });
     </script>
 
-    {{-- Service Worker for PWA --}}
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(function (reg) {
-                        console.log('Service Worker registered', reg.scope);
-                    })
-                    .catch(function (err) {
-                        console.log('Service Worker registration failed', err);
-                    });
+                    .then(function (reg) { console.log('SW registered', reg.scope); })
+                    .catch(function (err) { console.log('SW failed', err); });
             });
         }
     </script>
